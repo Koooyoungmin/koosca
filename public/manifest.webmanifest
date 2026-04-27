@@ -1,0 +1,22 @@
+{
+  "name": "구영민必학원 독서실",
+  "short_name": "구영민독서실",
+  "description": "관리형 독서실 학습 관리 시스템",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fbf9",
+  "theme_color": "#3aa393",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
