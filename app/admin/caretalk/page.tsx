@@ -11,9 +11,11 @@ interface Message {
   timestamp: number;
 }
 
-const STORAGE_KEY = "koosca-caretalk-messages";
+// 학부모별 독립 storage key 생성
+function getStorageKey(parentId: string) {
+  return `koosca-caretalk-${parentId}`;
+}
 
-// 데모용 학부모 목록
 const DEMO_PARENTS = [
   { id: "p1", name: "김민준 학부모", childName: "김민준", grade: "고3", phone: "010-1234-5678" },
   { id: "p2", name: "이서연 학부모", childName: "이서연", grade: "고2", phone: "010-2345-6789" },
@@ -21,57 +23,50 @@ const DEMO_PARENTS = [
   { id: "p4", name: "최수아 학부모", childName: "최수아", grade: "고3", phone: "010-4567-8901" },
 ];
 
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: "1",
-    sender: "admin",
-    text: "안녕하세요! 구영민必학원 독서실입니다. 궁금한 사항이 있으시면 언제든지 문의해 주세요.",
-    time: "09:00",
-    timestamp: Date.now() - 7200000,
-  },
-  {
-    id: "2",
-    sender: "admin",
-    text: "오늘 민준이가 오전 9시에 등원했습니다. 현재 수학 공부 중입니다 😊",
-    time: "09:05",
-    timestamp: Date.now() - 7100000,
-  },
-  {
-    id: "3",
-    sender: "parent",
-    text: "감사합니다! 오늘 몇 시에 하원 예정인가요?",
-    time: "10:30",
-    timestamp: Date.now() - 3600000,
-  },
-  {
-    id: "4",
-    sender: "admin",
-    text: "오늘은 오후 6시 하원 예정입니다. 학습 상황이 좋아서 오늘 목표 달성할 것 같아요!",
-    time: "10:32",
-    timestamp: Date.now() - 3500000,
-  },
-];
+// 학부모별 초기 메시지 (각각 다른 내용)
+function getInitialMessages(parentId: string, childName: string): Message[] {
+  return [
+    {
+      id: `${parentId}-init-1`,
+      sender: "admin",
+      text: `안녕하세요! 구영민必학원 독서실입니다. ${childName} 학생 관련 문의사항이 있으시면 언제든지 연락주세요.`,
+      time: "09:00",
+      timestamp: Date.now() - 7200000,
+    },
+  ];
+}
 
 export default function AdminCaretalkPage() {
   const [selectedParent, setSelectedParent] = useState(DEMO_PARENTS[0]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // localStorage에서 메시지 불러오기 (폴링으로 학부모 메시지 실시간 반영)
+  // 선택된 학부모가 바뀔 때마다 해당 학부모의 채팅 불러오기
   useEffect(() => {
+    const key = getStorageKey(selectedParent.id);
+
     const load = () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(key);
       if (stored) {
         setMessages(JSON.parse(stored));
       } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MESSAGES));
-        setMessages(INITIAL_MESSAGES);
+        const initial = getInitialMessages(selectedParent.id, selectedParent.childName);
+        localStorage.setItem(key, JSON.stringify(initial));
+        setMessages(initial);
       }
     };
+
     load();
-    const interval = setInterval(load, 2000);
-    return () => clearInterval(interval);
+
+    // 이전 인터벌 정리 후 새 인터벌 등록 (2초마다 학부모 측 메시지 동기화)
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(load, 2000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [selectedParent]);
 
   useEffect(() => {
@@ -80,6 +75,7 @@ export default function AdminCaretalkPage() {
 
   function sendMessage() {
     if (!input.trim()) return;
+    const key = getStorageKey(selectedParent.id);
     const now = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
     const newMsg: Message = {
       id: Date.now().toString(),
@@ -90,7 +86,7 @@ export default function AdminCaretalkPage() {
     };
     const updated = [...messages, newMsg];
     setMessages(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    localStorage.setItem(key, JSON.stringify(updated));
     setInput("");
   }
 
@@ -101,7 +97,14 @@ export default function AdminCaretalkPage() {
     }
   }
 
-  const unreadCount = messages.filter((m) => m.sender === "parent").length;
+  // 각 학부모별 미읽은 메시지 수 계산
+  function getUnreadCount(parentId: string) {
+    const key = getStorageKey(parentId);
+    const stored = localStorage.getItem(key);
+    if (!stored) return 0;
+    const msgs: Message[] = JSON.parse(stored);
+    return msgs.filter((m) => m.sender === "parent").length;
+  }
 
   return (
     <div className="flex h-screen max-h-screen bg-brand-50">
@@ -114,7 +117,7 @@ export default function AdminCaretalkPage() {
         <div className="flex-1 overflow-y-auto py-2">
           {DEMO_PARENTS.map((parent) => {
             const isSelected = selectedParent.id === parent.id;
-            const hasUnread = parent.id === "p1" && unreadCount > 0;
+            const unread = getUnreadCount(parent.id);
             return (
               <button
                 key={parent.id}
@@ -129,7 +132,7 @@ export default function AdminCaretalkPage() {
                   <div className="grid h-9 w-9 place-items-center rounded-full bg-brand-100">
                     <User className="w-4 h-4 text-brand-600" />
                   </div>
-                  {hasUnread && (
+                  {unread > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-red-500 border-2 border-white" />
                   )}
                 </div>
@@ -139,9 +142,9 @@ export default function AdminCaretalkPage() {
                   </p>
                   <p className="text-xs text-brand-400">{parent.grade}</p>
                 </div>
-                {hasUnread && (
+                {unread > 0 && (
                   <span className="text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 flex-shrink-0">
-                    {unreadCount}
+                    {unread}
                   </span>
                 )}
               </button>

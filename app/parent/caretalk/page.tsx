@@ -11,57 +11,62 @@ interface Message {
   timestamp: number;
 }
 
-const STORAGE_KEY = "koosca-caretalk-messages";
+// 학부모 측에서는 자신의 고정 ID를 사용 (데모: p1)
+// 실제 서비스에서는 로그인한 사용자 ID를 사용
+const MY_PARENT_ID = "p1";
+const STORAGE_KEY = `koosca-caretalk-${MY_PARENT_ID}`;
 
-const INITIAL: Message[] = [
-  {
-    id: "1",
-    sender: "admin",
-    text: "안녕하세요! 구영민必학원 독서실입니다. 궁금한 사항이 있으시면 언제든지 문의해 주세요.",
-    time: "09:00",
-    timestamp: Date.now() - 7200000,
-  },
-  {
-    id: "2",
-    sender: "admin",
-    text: "오늘 민준이가 오전 9시에 등원했습니다. 현재 수학 공부 중입니다 😊",
-    time: "09:05",
-    timestamp: Date.now() - 7100000,
-  },
-  {
-    id: "3",
-    sender: "parent",
-    text: "감사합니다! 오늘 몇 시에 하원 예정인가요?",
-    time: "10:30",
-    timestamp: Date.now() - 3600000,
-  },
-  {
-    id: "4",
-    sender: "admin",
-    text: "오늘은 오후 6시 하원 예정입니다. 학습 상황이 좋아서 오늘 목표 달성할 것 같아요!",
-    time: "10:32",
-    timestamp: Date.now() - 3500000,
-  },
-];
+function getInitialMessages(): Message[] {
+  return [
+    {
+      id: "p1-init-1",
+      sender: "admin",
+      text: "안녕하세요! 구영민必학원 독서실입니다. 김민준 학생 관련 문의사항이 있으시면 언제든지 연락주세요.",
+      time: "09:00",
+      timestamp: Date.now() - 7200000,
+    },
+    {
+      id: "p1-init-2",
+      sender: "admin",
+      text: "오늘 민준이가 오전 9시에 등원했습니다. 현재 수학 공부 중입니다 😊",
+      time: "09:05",
+      timestamp: Date.now() - 7100000,
+    },
+    {
+      id: "p1-init-3",
+      sender: "parent",
+      text: "감사합니다! 오늘 몇 시에 하원 예정인가요?",
+      time: "10:30",
+      timestamp: Date.now() - 3600000,
+    },
+    {
+      id: "p1-init-4",
+      sender: "admin",
+      text: "오늘은 오후 6시 하원 예정입니다. 학습 상황이 좋아서 오늘 목표 달성할 것 같아요!",
+      time: "10:32",
+      timestamp: Date.now() - 3500000,
+    },
+  ];
+}
 
 export default function CaretalkPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // localStorage에서 메시지 불러오기 (폴링으로 관리자 메시지 실시간 반영)
+  // 내 채팅방(p1)만 불러오기 - 2초마다 관리자 답변 동기화
   useEffect(() => {
     const load = () => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         setMessages(JSON.parse(stored));
       } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL));
-        setMessages(INITIAL);
+        const initial = getInitialMessages();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        setMessages(initial);
       }
     };
     load();
-    // 2초마다 관리자 답변 확인 (데모 실시간 연동)
     const interval = setInterval(load, 2000);
     return () => clearInterval(interval);
   }, []);
