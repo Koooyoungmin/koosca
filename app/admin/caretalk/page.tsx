@@ -97,8 +97,9 @@ export default function AdminCaretalkPage() {
     }
   }
 
-  // 각 학부모별 미읽은 메시지 수 계산
+  // 각 학부모별 미읽은 메시지 수 계산 (클라이언트에서만 실행)
   function getUnreadCount(parentId: string) {
+    if (typeof window === "undefined") return 0;
     const key = getStorageKey(parentId);
     const stored = localStorage.getItem(key);
     if (!stored) return 0;
