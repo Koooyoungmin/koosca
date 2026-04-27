@@ -18,8 +18,8 @@ import {
 const adminNav = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/students", label: "학생", icon: Users },
-  { href: "/admin/reports", label: "보고서", icon: FileText },
-  { href: "/admin/chat", label: "채팅", icon: MessagesSquare },
+  { href: "/admin/chat", label: "학생채팅", icon: MessagesSquare },
+  { href: "/admin/caretalk", label: "케어톡", icon: MessageCircle },
   { href: "/admin/notices", label: "공지", icon: Bell },
 ];
 
@@ -44,7 +44,8 @@ interface BottomNavProps {
 
 export function BottomNav({ role }: BottomNavProps) {
   const pathname = usePathname();
-  const navItems = role === "admin" ? adminNav : role === "student" ? studentNav : parentNav;
+  const navItems =
+    role === "admin" ? adminNav : role === "student" ? studentNav : parentNav;
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-100 z-50">
@@ -57,7 +58,7 @@ export function BottomNav({ role }: BottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-3 text-xs transition-colors relative",
+                "flex-1 flex flex-col items-center gap-1 py-3 text-xs transition-colors",
                 isActive ? "text-brand-900 font-medium" : "text-brand-400"
               )}
             >

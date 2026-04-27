@@ -21,6 +21,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  badge?: string;
 }
 
 const adminNav: NavItem[] = [
@@ -30,6 +31,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/textbooks", label: "교재 관리", icon: <BookOpen className="w-5 h-5" /> },
   { href: "/admin/notices", label: "공지사항", icon: <Bell className="w-5 h-5" /> },
   { href: "/admin/chat", label: "학생 채팅", icon: <MessagesSquare className="w-5 h-5" /> },
+  { href: "/admin/caretalk", label: "케어톡 (학부모)", icon: <MessageCircle className="w-5 h-5" /> },
 ];
 
 const studentNav: NavItem[] = [
@@ -69,7 +71,7 @@ export function Sidebar({ role, userName }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-brand-100 min-h-screen">
+    <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-brand-100 min-h-screen">
       {/* 로고 */}
       <div className="p-6 border-b border-brand-100">
         <div className="flex items-center gap-3">
@@ -90,10 +92,10 @@ export function Sidebar({ role, userName }: SidebarProps) {
       </div>
 
       {/* 네비게이션 */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
-          const isChat = item.href.endsWith("/chat");
+          const isChat = item.href.endsWith("/chat") || item.href.endsWith("/caretalk");
           return (
             <Link
               key={item.href}
@@ -102,16 +104,14 @@ export function Sidebar({ role, userName }: SidebarProps) {
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
                 isActive
                   ? "bg-brand-900 text-brand-50 font-medium"
-                  : isChat
-                  ? "text-brand-600 hover:bg-brand-50 hover:text-brand-900 border border-dashed border-brand-200 mt-2"
                   : "text-brand-600 hover:bg-brand-50 hover:text-brand-900"
               )}
             >
               {item.icon}
-              {item.label}
+              <span className="flex-1 truncate">{item.label}</span>
               {isChat && !isActive && (
-                <span className="ml-auto text-[10px] bg-brand-900 text-brand-50 rounded-full px-1.5 py-0.5">
-                  NEW
+                <span className="text-[10px] bg-brand-100 text-brand-600 rounded-full px-1.5 py-0.5 flex-shrink-0">
+                  대화
                 </span>
               )}
             </Link>
