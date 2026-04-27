@@ -2,51 +2,54 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 import { Suspense } from "react";
+
+// 데모 계정 정보
+const DEMO_ACCOUNTS = {
+  admin: { email: "admin@koosca.kr", password: "admin1234", label: "관리자" },
+  student: { email: "student@koosca.kr", password: "student1234", label: "학생" },
+  parent: { email: "parent@koosca.kr", password: "parent1234", label: "학부모" },
+};
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const role = (searchParams.get("role") ?? "admin") as "admin" | "student" | "parent";
-  const next = searchParams.get("next") ?? "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const roleLabel = role === "student" ? "학생" : role === "parent" ? "학부모" : "관리자";
+  const demo = DEMO_ACCOUNTS[role];
+  const dest = role === "student" ? "/student" : role === "parent" ? "/parent" : "/admin";
+
+  function handleDemoLogin() {
+    // 데모 계정으로 바로 진입
+    if (typeof window !== "undefined") {
+      localStorage.setItem("koosca-role", role);
+      localStorage.setItem("koosca-user", JSON.stringify({ role, name: demo.label }));
+    }
+    router.push(dest);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setLoading(false);
-      setError(authError.message);
+    // 데모 모드: 이메일/비밀번호 일치 시 바로 진입
+    if (email === demo.email && password === demo.password) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("koosca-role", role);
+        localStorage.setItem("koosca-user", JSON.stringify({ role, name: demo.label }));
+      }
+      router.push(dest);
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .maybeSingle();
-
     setLoading(false);
-
-    const userRole = profile?.role ?? role;
-    const dest = next || (userRole === "student" ? "/student" : userRole === "parent" ? "/parent" : "/admin");
-    router.push(dest);
-    router.refresh();
+    setError("이메일 또는 비밀번호가 올바르지 않습니다. 아래 데모 계정을 사용해 보세요.");
   }
 
   return (
@@ -97,69 +100,92 @@ function LoginForm() {
 
         {/* 우측 로그인 폼 */}
         <section className="flex flex-1 items-center justify-center py-12 lg:py-0">
-          <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-sm rounded-[28px] border border-brand-200 bg-white/70 p-8 shadow-soft backdrop-blur-sm sm:p-10"
-          >
-            <p className="font-display text-xs uppercase tracking-[0.18em] text-brand-500">
-              {roleLabel} 로그인
-            </p>
-            <h2 className="mt-3 font-serif text-3xl leading-tight text-brand-900">
-              다시 오신 것을
-              <br />
-              환영합니다.
-            </h2>
-
-            <div className="mt-8 space-y-5">
-              <label className="block">
-                <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
-                  이메일
-                </span>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
-                />
-              </label>
-              <label className="block">
-                <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
-                  비밀번호
-                </span>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
-                />
-              </label>
+          <div className="w-full max-w-sm space-y-4">
+            {/* 데모 빠른 진입 버튼 */}
+            <div className="rounded-2xl border border-brand-200 bg-white/70 p-5 shadow-soft backdrop-blur-sm">
+              <p className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500 mb-3">
+                데모 — 바로 체험하기
+              </p>
+              <button
+                onClick={handleDemoLogin}
+                className="group flex w-full items-center justify-center gap-2 rounded-full bg-brand-900 py-3 font-display text-sm font-medium text-brand-50 transition hover:bg-brand-800"
+              >
+                {demo.label}으로 바로 입장
+                <span className="transition-transform group-hover:translate-x-0.5">→</span>
+              </button>
+              <p className="mt-3 text-center text-[11px] text-brand-400">
+                ID: {demo.email} / PW: {demo.password}
+              </p>
             </div>
 
-            {error && (
-              <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-                {error}
-              </p>
-            )}
+            {/* 구분선 */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-brand-200" />
+              <span className="text-xs text-brand-400">또는 직접 로그인</span>
+              <div className="flex-1 h-px bg-brand-200" />
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="group mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-brand-900 py-3 font-display text-sm font-medium text-brand-50 transition hover:bg-brand-800 disabled:opacity-50"
+            {/* 이메일/비밀번호 폼 */}
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-[28px] border border-brand-200 bg-white/70 p-8 shadow-soft backdrop-blur-sm sm:p-10"
             >
-              {loading ? "로그인 중..." : "로그인"}
-              {!loading && (
-                <span className="transition-transform group-hover:translate-x-0.5">→</span>
-              )}
-            </button>
+              <p className="font-display text-xs uppercase tracking-[0.18em] text-brand-500">
+                {demo.label} 로그인
+              </p>
+              <h2 className="mt-3 font-serif text-3xl leading-tight text-brand-900">
+                다시 오신 것을
+                <br />
+                환영합니다.
+              </h2>
 
-            <p className="mt-6 text-center text-xs text-brand-400">
-              계정 문제가 있으면 관리자에게 문의하세요.
-            </p>
-          </form>
+              <div className="mt-8 space-y-5">
+                <label className="block">
+                  <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
+                    이메일
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={demo.email}
+                    className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
+                  />
+                </label>
+                <label className="block">
+                  <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
+                    비밀번호
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
+                  />
+                </label>
+              </div>
+
+              {error && (
+                <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="group mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-brand-900 py-3 font-display text-sm font-medium text-brand-50 transition hover:bg-brand-800 disabled:opacity-50"
+              >
+                {loading ? "로그인 중..." : "로그인"}
+                {!loading && (
+                  <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                )}
+              </button>
+            </form>
+          </div>
         </section>
       </div>
     </main>

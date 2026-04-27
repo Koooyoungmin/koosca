@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase";
 import {
   LayoutDashboard,
   Users,
@@ -58,11 +57,12 @@ export function Sidebar({ role, userName }: SidebarProps) {
   const navItems = role === "admin" ? adminNav : role === "student" ? studentNav : parentNav;
   const roleLabel = role === "admin" ? "관리자" : role === "student" ? "학생" : "학부모";
 
-  async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+  function handleLogout() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("koosca-role");
+      localStorage.removeItem("koosca-user");
+    }
     router.push("/");
-    router.refresh();
   }
 
   return (
