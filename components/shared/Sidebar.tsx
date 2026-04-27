@@ -14,6 +14,7 @@ import {
   ClipboardList,
   BarChart2,
   MessageCircle,
+  MessagesSquare,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,6 +29,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/reports", label: "보고서", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/textbooks", label: "교재 관리", icon: <BookOpen className="w-5 h-5" /> },
   { href: "/admin/notices", label: "공지사항", icon: <Bell className="w-5 h-5" /> },
+  { href: "/admin/chat", label: "학생 채팅", icon: <MessagesSquare className="w-5 h-5" /> },
 ];
 
 const studentNav: NavItem[] = [
@@ -36,6 +38,7 @@ const studentNav: NavItem[] = [
   { href: "/student/plan", label: "Daily Plan", icon: <ClipboardList className="w-5 h-5" /> },
   { href: "/student/stats", label: "학습 통계", icon: <BarChart2 className="w-5 h-5" /> },
   { href: "/student/notices", label: "공지사항", icon: <Bell className="w-5 h-5" /> },
+  { href: "/student/chat", label: "관리자 채팅", icon: <MessagesSquare className="w-5 h-5" /> },
 ];
 
 const parentNav: NavItem[] = [
@@ -90,6 +93,7 @@ export function Sidebar({ role, userName }: SidebarProps) {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
+          const isChat = item.href.endsWith("/chat");
           return (
             <Link
               key={item.href}
@@ -98,11 +102,18 @@ export function Sidebar({ role, userName }: SidebarProps) {
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
                 isActive
                   ? "bg-brand-900 text-brand-50 font-medium"
+                  : isChat
+                  ? "text-brand-600 hover:bg-brand-50 hover:text-brand-900 border border-dashed border-brand-200 mt-2"
                   : "text-brand-600 hover:bg-brand-50 hover:text-brand-900"
               )}
             >
               {item.icon}
               {item.label}
+              {isChat && !isActive && (
+                <span className="ml-auto text-[10px] bg-brand-900 text-brand-50 rounded-full px-1.5 py-0.5">
+                  NEW
+                </span>
+              )}
             </Link>
           );
         })}

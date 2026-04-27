@@ -12,13 +12,14 @@ import {
   ClipboardList,
   BarChart2,
   MessageCircle,
-  BookOpen,
+  MessagesSquare,
 } from "lucide-react";
 
 const adminNav = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/students", label: "학생", icon: Users },
   { href: "/admin/reports", label: "보고서", icon: FileText },
+  { href: "/admin/chat", label: "채팅", icon: MessagesSquare },
   { href: "/admin/notices", label: "공지", icon: Bell },
 ];
 
@@ -27,6 +28,7 @@ const studentNav = [
   { href: "/student/timer", label: "타이머", icon: Timer },
   { href: "/student/plan", label: "플랜", icon: ClipboardList },
   { href: "/student/stats", label: "통계", icon: BarChart2 },
+  { href: "/student/chat", label: "채팅", icon: MessagesSquare },
 ];
 
 const parentNav = [
@@ -55,7 +57,7 @@ export function BottomNav({ role }: BottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1 py-3 text-xs transition-colors",
+                "flex-1 flex flex-col items-center gap-1 py-3 text-xs transition-colors relative",
                 isActive ? "text-brand-900 font-medium" : "text-brand-400"
               )}
             >
