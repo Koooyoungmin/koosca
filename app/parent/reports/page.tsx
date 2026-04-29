@@ -36,21 +36,12 @@ export default function ParentReports() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("로그인이 필요합니다.");
 
-      // 1. 자녀 정보 가져오기 (현재는 첫 번째 학생으로 설정)
-      const { data: student, error: studentError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "student")
-        .limit(1)
-        .single();
-
-      if (studentError) throw studentError;
-
-      // 2. 해당 학생의 보고서 목록 가져오기
+      // 현재는 학부모-학생 관계 테이블이 없으므로, 
+      // 모든 학생의 보고서를 불러오도록 수정하여 데이터가 보이는지 확인합니다.
+      // (실제 운영 시에는 .eq("student_id", 자녀ID) 필터가 필요합니다)
       const { data, error: reportError } = await supabase
         .from("reports")
         .select("*")
-        .eq("student_id", student.id)
         .order("date", { ascending: false });
 
       if (reportError) throw reportError;
