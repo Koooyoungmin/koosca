@@ -152,7 +152,7 @@ export default function ParentHome() {
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600 font-medium">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="parent" />
         </main>
       </div>
     );
@@ -169,7 +169,7 @@ export default function ParentHome() {
               <p className="text-sm text-brand-400 font-medium">관리자에게 문의해주세요.</p>
             </div>
           </div>
-          <BottomNav />
+          <BottomNav role="parent" />
         </main>
       </div>
     );
@@ -305,7 +305,7 @@ export default function ParentHome() {
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="parent" />
       </main>
     </div>
   );

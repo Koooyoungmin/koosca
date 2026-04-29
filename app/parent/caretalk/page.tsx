@@ -148,12 +148,12 @@ export default function CaretalkPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="parent" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="parent" />
         </main>
       </div>
     );
@@ -161,7 +161,7 @@ export default function CaretalkPage() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="parent" />
       <main className="flex-1 flex flex-col">
         {/* 헤더 */}
         <div className="px-6 py-4 bg-white border-b border-brand-100 flex-shrink-0">

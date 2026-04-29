@@ -176,12 +176,12 @@ export default function AdminChatPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="admin" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="admin" />
         </main>
       </div>
     );
@@ -189,7 +189,7 @@ export default function AdminChatPage() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="admin" />
       <main className="flex-1 flex">
         {/* 학생 목록 사이드 패널 */}
         <div className="w-64 flex-shrink-0 bg-white border-r border-brand-100 flex flex-col">
@@ -337,7 +337,7 @@ export default function AdminChatPage() {
           )}
         </div>
       </main>
-      <BottomNav />
+      <BottomNav role="admin" />
     </div>
   );
 }

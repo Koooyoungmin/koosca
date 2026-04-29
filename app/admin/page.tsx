@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600 font-medium">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="admin" />
         </main>
       </div>
     );
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="admin" />
       </main>
     </div>
   );

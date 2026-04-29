@@ -138,12 +138,12 @@ export default function StudentChatPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="student" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="student" />
         </main>
       </div>
     );
@@ -151,7 +151,7 @@ export default function StudentChatPage() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="student" />
       <main className="flex-1 flex flex-col">
         {/* 헤더 */}
         <div className="bg-white border-b border-brand-100 px-6 py-4 flex items-center gap-3 flex-shrink-0">

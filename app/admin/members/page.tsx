@@ -102,7 +102,7 @@ export default function MembersPage() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="admin" />
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-6">
           <div className="max-w-4xl mx-auto">
@@ -258,7 +258,7 @@ export default function MembersPage() {
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="admin" />
       </main>
     </div>
   );

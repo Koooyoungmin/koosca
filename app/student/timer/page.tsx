@@ -180,12 +180,12 @@ export default function TimerPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="student" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             <p className="text-brand-600">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="student" />
         </main>
       </div>
     );
@@ -193,7 +193,7 @@ export default function TimerPage() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="student" />
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-6">
           <div className="max-w-md mx-auto">
@@ -295,7 +295,7 @@ export default function TimerPage() {
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="student" />
       </main>
     </div>
   );

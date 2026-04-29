@@ -1,5 +1,5 @@
-import { Sidebar } from "@/components/shared/Sidebar";
-import { BottomNav } from "@/components/shared/BottomNav";
+import Sidebar from "@/components/shared/Sidebar";
+import BottomNav from "@/components/shared/BottomNav";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (

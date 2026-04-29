@@ -123,7 +123,7 @@ export default function StudentHome() {
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="student" />
       </main>
     </div>
   );
