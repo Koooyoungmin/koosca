@@ -5,23 +5,23 @@ type Status = "study" | "outing" | "sleep" | "away";
 const statusConfig: Record<Status, { label: string; className: string; dot: string }> = {
   study: {
     label: "학습 중",
-    className: "bg-status-study/10 text-status-study border border-status-study/20",
-    dot: "bg-status-study animate-pulse",
+    className: "bg-brand-50 text-brand-500 border-brand-100",
+    dot: "bg-brand-500 animate-pulse",
   },
   outing: {
     label: "외출 중",
-    className: "bg-status-outing/10 text-status-outing border border-status-outing/20",
-    dot: "bg-status-outing",
+    className: "bg-amber-50 text-amber-600 border-amber-100",
+    dot: "bg-amber-500",
   },
   sleep: {
     label: "수면 중",
-    className: "bg-status-sleep/10 text-status-sleep border border-status-sleep/20",
-    dot: "bg-status-sleep",
+    className: "bg-slate-50 text-slate-500 border-slate-100",
+    dot: "bg-slate-400",
   },
   away: {
     label: "하원",
-    className: "bg-gray-100 text-gray-500 border border-gray-200",
-    dot: "bg-gray-400",
+    className: "bg-red-50 text-red-500 border-red-100",
+    dot: "bg-red-400",
   },
 };
 
@@ -35,7 +35,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border",
         config.className,
         className
       )}

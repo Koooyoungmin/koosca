@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase";
 import {
   LayoutDashboard,
   Users,
@@ -55,44 +56,42 @@ interface SidebarProps {
   userName?: string;
 }
 
-export function Sidebar({ role, userName }: SidebarProps) {
+export default function Sidebar({ role, userName }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createClient();
 
   const navItems = role === "admin" ? adminNav : role === "student" ? studentNav : parentNav;
   const roleLabel = role === "admin" ? "관리자" : role === "student" ? "학생" : "학부모";
 
-  function handleLogout() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("koosca-role");
-      localStorage.removeItem("koosca-user");
-    }
+  async function handleLogout() {
+    await supabase.auth.signOut();
     router.push("/");
   }
 
   return (
-    <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-brand-100 min-h-screen">
+    <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-brand-100 min-h-screen flex-shrink-0">
       {/* 로고 */}
-      <div className="p-6 border-b border-brand-100">
+      <div className="p-5 border-b border-brand-100">
         <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-900 font-serif text-base font-semibold text-brand-50">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-900 font-serif text-base font-semibold text-brand-50 flex-shrink-0">
             必
           </span>
           <div>
-            <p className="text-xs font-medium text-brand-700">구영민必학원</p>
-            <p className="text-xs text-brand-400">독서실 관리</p>
+            <p className="text-xs font-semibold text-brand-800">구영민必학원</p>
+            <p className="text-[11px] text-brand-400">독서실 관리</p>
           </div>
         </div>
       </div>
 
       {/* 사용자 정보 */}
-      <div className="px-4 py-3 border-b border-brand-100">
-        <p className="text-xs text-brand-400">{roleLabel}</p>
-        <p className="text-sm font-medium text-brand-800 truncate">{userName ?? "사용자"}</p>
+      <div className="px-5 py-3 border-b border-brand-100">
+        <p className="text-[10px] text-brand-400 uppercase tracking-wider">{roleLabel}</p>
+        <p className="text-sm font-semibold text-brand-800 truncate">{userName ?? "사용자"}</p>
       </div>
 
       {/* 네비게이션 */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const isChat = item.href.endsWith("/chat") || item.href.endsWith("/caretalk");
@@ -101,13 +100,15 @@ export function Sidebar({ role, userName }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
+                "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] transition-all",
                 isActive
-                  ? "bg-brand-900 text-brand-50 font-medium"
+                  ? "bg-brand-700 text-white font-semibold"
                   : "text-brand-600 hover:bg-brand-50 hover:text-brand-900"
               )}
             >
-              {item.icon}
+              <div className={cn(isActive ? "text-white" : "text-brand-500")}>
+                {item.icon}
+              </div>
               <span className="flex-1 truncate">{item.label}</span>
               {isChat && !isActive && (
                 <span className="text-[10px] bg-brand-100 text-brand-600 rounded-full px-1.5 py-0.5 flex-shrink-0">
@@ -120,10 +121,10 @@ export function Sidebar({ role, userName }: SidebarProps) {
       </nav>
 
       {/* 로그아웃 */}
-      <div className="p-3 border-t border-brand-100">
+      <div className="p-2.5 border-t border-brand-100">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-brand-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-brand-400 hover:bg-red-50 hover:text-red-600 transition-all"
         >
           <LogOut className="w-5 h-5" />
           로그아웃

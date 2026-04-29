@@ -26,7 +26,6 @@ function LoginForm() {
   const dest = role === "student" ? "/student" : role === "parent" ? "/parent" : "/admin";
 
   function handleDemoLogin() {
-    // 데모 계정으로 바로 진입
     if (typeof window !== "undefined") {
       localStorage.setItem("koosca-role", role);
       localStorage.setItem("koosca-user", JSON.stringify({ role, name: demo.label }));
@@ -43,7 +42,6 @@ function LoginForm() {
       const supabase = createClient();
 
       if (showSignup) {
-        // 회원가입
         if (!signupName.trim()) {
           setError("이름을 입력해 주세요.");
           setLoading(false);
@@ -64,7 +62,6 @@ function LoginForm() {
           return;
         }
 
-        // 프로필 생성
         if (data.user) {
           const { error: profileError } = await supabase.from("profiles").insert({
             id: data.user.id,
@@ -87,7 +84,6 @@ function LoginForm() {
         setSignupName("");
         alert("회원가입 완료! 로그인해 주세요.");
       } else {
-        // 로그인
         const { data, error: loginError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -100,7 +96,6 @@ function LoginForm() {
         }
 
         if (data.user) {
-          // 프로필 정보 가져오기
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
@@ -113,7 +108,6 @@ function LoginForm() {
             return;
           }
 
-          // localStorage에 저장
           if (typeof window !== "undefined") {
             localStorage.setItem("koosca-role", profile.role);
             localStorage.setItem("koosca-user", JSON.stringify(profile));
@@ -130,91 +124,84 @@ function LoginForm() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-brand-50">
-      {/* 배경 블러 원 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -right-40 h-[520px] w-[520px] rounded-full opacity-[0.18] blur-3xl"
-        style={{ background: "radial-gradient(circle, #d97757 0%, transparent 70%)" }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-40 -left-40 h-[480px] w-[480px] rounded-full opacity-[0.12] blur-3xl"
-        style={{ background: "radial-gradient(circle, #6a9bcc 0%, transparent 70%)" }}
-      />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col items-stretch px-6 lg:flex-row">
+    <main className="relative min-h-screen overflow-hidden bg-brand-50 flex items-stretch">
+      {/* 배경 장식 */}
+      <div className="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-brand-400/20 to-transparent pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-brand-600/10 to-transparent pointer-events-none" />
+
+      <div className="relative mx-auto flex min-h-screen max-w-[1100px] flex-col items-stretch px-6 lg:flex-row flex-1">
         {/* 좌측 슬로건 */}
         <section className="flex flex-1 flex-col justify-center py-12 lg:py-0 lg:pr-12">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-900 font-serif text-lg font-semibold text-brand-50">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-900 font-serif text-lg font-bold text-white shadow-lg">
               必
             </span>
-            <span className="font-display text-sm tracking-wide text-brand-700">
+            <span className="text-sm font-semibold tracking-wider text-brand-600 uppercase">
               구영민必학원 독서실
             </span>
           </div>
-          <h1 className="mt-10 font-serif text-[44px] leading-[1.05] tracking-tight text-brand-900 sm:text-[56px] lg:text-[64px]">
-            오늘도, 김이 있는 학습을.
+          <h1 className="mt-10 font-serif text-[44px] leading-[1.05] tracking-tight text-brand-900 sm:text-[56px] lg:text-[64px] font-bold">
+            오늘도,<br />깊이 있는 학습을.
           </h1>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-brand-800/70">
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-brand-600/80">
             학습 시간, 성취율, 하원 보고서까지 — 학생·학부모·관리자가 한 화면에서 같은 그림을 봅니다.
           </p>
-          <div className="mt-10 hidden items-center gap-6 text-xs text-brand-400 lg:flex">
+          <div className="mt-10 hidden items-center gap-8 text-xs font-semibold text-brand-400 lg:flex">
             <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-status-study" /> 실시간 학습
+              <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" /> 실시간 학습
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-status-outing" /> 외출 관리
+              <span className="h-2 w-2 rounded-full bg-amber-400" /> 외출 관리
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-status-sleep" /> 하원 보고서
+              <span className="h-2 w-2 rounded-full bg-slate-400" /> 하원 보고서
             </span>
           </div>
         </section>
 
         {/* 우측 로그인 폼 */}
         <section className="flex flex-1 items-center justify-center py-12 lg:py-0">
-          <div className="w-full max-w-sm space-y-4">
+          <div className="w-full max-w-sm space-y-6">
             {/* 데모 빠른 진입 버튼 */}
-            <div className="rounded-2xl border border-brand-200 bg-white/70 p-5 shadow-soft backdrop-blur-sm">
-              <p className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500 mb-3">
+            <div className="rounded-[32px] border border-brand-100 bg-white/80 p-6 shadow-soft backdrop-blur-md">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-400 mb-4">
                 데모 — 바로 체험하기
               </p>
               <button
                 onClick={handleDemoLogin}
-                className="group flex w-full items-center justify-center gap-2 rounded-full bg-brand-900 py-3 font-display text-sm font-medium text-brand-50 transition hover:bg-brand-800"
+                className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-900 py-4 text-sm font-bold text-white transition-all hover:bg-brand-800 hover:shadow-lg active:scale-[0.98]"
               >
                 {demo.label}으로 바로 입장
-                <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                <span className="transition-transform group-hover:translate-x-1">→</span>
               </button>
-              <p className="mt-3 text-center text-[11px] text-brand-400">
+              <p className="mt-4 text-center text-[11px] text-brand-400 font-medium">
                 ID: {demo.email} / PW: {demo.password}
               </p>
             </div>
 
             {/* 구분선 */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-brand-200" />
-              <span className="text-xs text-brand-400">또는 직접 로그인</span>
-              <div className="flex-1 h-px bg-brand-200" />
+            <div className="flex items-center gap-4 px-4">
+              <div className="flex-1 h-px bg-brand-100" />
+              <span className="text-[11px] font-bold text-brand-300 uppercase tracking-widest">또는 직접 로그인</span>
+              <div className="flex-1 h-px bg-brand-100" />
             </div>
 
             {/* 이메일/비밀번호 폼 */}
             <form
               onSubmit={handleSubmit}
-              className="rounded-[28px] border border-brand-200 bg-white/70 p-8 shadow-soft backdrop-blur-sm sm:p-10"
+              className="rounded-[32px] border border-brand-100 bg-white/80 p-8 shadow-soft backdrop-blur-md sm:p-10"
             >
-              <p className="font-display text-xs uppercase tracking-[0.18em] text-brand-500">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-brand-400">
                 {showSignup ? "회원가입" : demo.label + " 로그인"}
               </p>
-              <h2 className="mt-3 font-serif text-3xl leading-tight text-brand-900">
+              <h2 className="mt-3 font-serif text-3xl font-bold leading-tight text-brand-900 whitespace-pre-line">
                 {showSignup ? "계정을 만들어\n주세요." : "다시 오신 것을\n환영합니다."}
               </h2>
 
-              <div className="mt-8 space-y-5">
+              <div className="mt-10 space-y-6">
                 {showSignup && (
-                  <label className="block">
-                    <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-400 ml-1">
                       이름
                     </span>
                     <input
@@ -223,12 +210,12 @@ function LoginForm() {
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
                       placeholder="홍길동"
-                      className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
+                      className="w-full border-0 border-b-2 border-brand-100 bg-transparent pb-3 pt-1 text-base font-medium text-brand-900 outline-none transition-all placeholder:text-brand-200 focus:border-brand-500"
                     />
-                  </label>
+                  </div>
                 )}
-                <label className="block">
-                  <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand-400 ml-1">
                     이메일
                   </span>
                   <input
@@ -237,11 +224,11 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
+                    className="w-full border-0 border-b-2 border-brand-100 bg-transparent pb-3 pt-1 text-base font-medium text-brand-900 outline-none transition-all placeholder:text-brand-200 focus:border-brand-500"
                   />
-                </label>
-                <label className="block">
-                  <span className="font-display text-[11px] uppercase tracking-[0.14em] text-brand-500">
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-brand-400 ml-1">
                     비밀번호
                   </span>
                   <input
@@ -250,13 +237,13 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="mt-2 w-full border-0 border-b border-brand-200 bg-transparent pb-2 pt-1 text-base text-brand-900 outline-none transition placeholder:text-brand-300 focus:border-brand-500"
+                    className="w-full border-0 border-b-2 border-brand-100 bg-transparent pb-3 pt-1 text-base font-medium text-brand-900 outline-none transition-all placeholder:text-brand-200 focus:border-brand-500"
                   />
-                </label>
+                </div>
               </div>
 
               {error && (
-                <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-500 border border-red-100">
                   {error}
                 </p>
               )}
@@ -264,22 +251,22 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-brand-900 py-3 font-display text-sm font-medium text-brand-50 transition hover:bg-brand-800 disabled:opacity-50"
+                className="group mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-900 py-4 text-sm font-bold text-white transition-all hover:bg-brand-800 hover:shadow-lg active:scale-[0.98] disabled:opacity-50"
               >
                 {loading ? "처리 중..." : showSignup ? "가입하기" : "로그인"}
                 {!loading && (
-                  <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
                 )}
               </button>
 
-              <p className="mt-4 text-center text-sm text-brand-600">
+              <p className="mt-6 text-center text-xs font-medium text-brand-500">
                 {showSignup ? (
                   <>
                     이미 계정이 있으신가요?{" "}
                     <button
                       type="button"
                       onClick={() => setShowSignup(false)}
-                      className="font-semibold text-brand-900 hover:underline"
+                      className="font-bold text-brand-900 hover:underline"
                     >
                       로그인
                     </button>
@@ -290,7 +277,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => setShowSignup(true)}
-                      className="font-semibold text-brand-900 hover:underline"
+                      className="font-bold text-brand-900 hover:underline"
                     >
                       가입하기
                     </button>

@@ -26,39 +26,45 @@ const roles = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-brand-50 flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-3xl">
+    <main className="min-h-screen bg-brand-50 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* 배경 장식 */}
+      <div className="absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-brand-400/20 to-transparent pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-brand-600/10 to-transparent pointer-events-none" />
+
+      <div className="w-full max-w-4xl relative z-10">
         {/* 헤더 */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand-900 font-serif text-xl font-semibold text-brand-50 shadow-soft">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-3 mb-8">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-900 font-serif text-xl font-bold text-white shadow-lg">
               必
             </span>
-            <span className="font-display text-sm tracking-wide text-brand-700">
-              구영민必학원 부속
+            <span className="text-sm font-semibold tracking-wider text-brand-600 uppercase">
+              구영민必학원 독서실
             </span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-brand-900 leading-tight mb-4">
-            관리형 독서실
+          <h1 className="font-serif text-5xl sm:text-7xl font-bold text-brand-900 leading-[1.1] tracking-tight mb-6">
+            오늘도,<br />깊이 있는 학습을.
           </h1>
-          <p className="text-brand-700/70 text-base max-w-md mx-auto leading-relaxed">
-            학습시간 · 계획 · 성취율을 실시간으로 관리하는 시스템
+          <p className="text-brand-600/80 text-lg max-w-lg mx-auto leading-relaxed">
+            학습 시간, 성취율, 하원 보고서까지 — 학생·학부모·관리자가 한 화면에서 같은 그림을 봅니다.
           </p>
         </div>
 
         {/* 역할 카드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
           {roles.map((role) => (
             <Link
               key={role.key}
               href={role.href}
-              className="group block rounded-2xl border border-brand-200 bg-white/70 backdrop-blur-sm p-6 shadow-soft hover:shadow-md hover:border-brand-400 hover:-translate-y-1 transition-all duration-200"
+              className="group block rounded-[32px] border border-brand-100 bg-white/80 backdrop-blur-md p-8 shadow-soft hover:shadow-xl hover:border-brand-300 hover:-translate-y-2 transition-all duration-300"
             >
-              <div className="text-3xl mb-3">{role.icon}</div>
-              <h2 className="font-serif text-xl font-semibold text-brand-900 mb-2">
+              <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                {role.icon}
+              </div>
+              <h2 className="font-serif text-2xl font-bold text-brand-900 mb-3">
                 {role.label}
               </h2>
-              <p className="text-sm text-brand-600 leading-relaxed">
+              <p className="text-sm text-brand-500 leading-relaxed">
                 {role.desc}
               </p>
             </Link>
@@ -66,24 +72,20 @@ export default function HomePage() {
         </div>
 
         {/* 상태 표시 */}
-        <div className="flex items-center justify-center gap-6 text-xs text-brand-400">
+        <div className="flex items-center justify-center gap-8 text-xs font-semibold text-brand-400">
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-status-study animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
             실시간 학습
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-status-outing" />
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
             외출 관리
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-status-sleep" />
+            <span className="h-2 w-2 rounded-full bg-slate-400" />
             하원 보고서
           </span>
         </div>
-
-        <p className="text-center text-xs text-brand-300 mt-8">
-          MVP · Phase 1 기반 구축 중
-        </p>
       </div>
     </main>
   );

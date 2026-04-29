@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatTime, getTodayStr } from "@/lib/utils";
-import { Users, Clock, CheckCircle, TrendingUp } from "lucide-react";
+import { Users, Clock, CheckCircle, TrendingUp, Search, Plus } from "lucide-react";
 import Sidebar from "@/components/shared/Sidebar";
 import BottomNav from "@/components/shared/BottomNav";
 
@@ -43,7 +43,6 @@ export default function AdminDashboard() {
 
   async function loadStudents() {
     try {
-      // 모든 학생 프로필 불러오기
       const { data: profiles, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -52,7 +51,6 @@ export default function AdminDashboard() {
 
       if (profileError) throw profileError;
 
-      // 각 학생의 오늘 상태 불러오기
       const today = getTodayStr();
       const { data: statuses, error: statusError } = await supabase
         .from("student_status")
@@ -61,7 +59,6 @@ export default function AdminDashboard() {
 
       if (statusError) throw statusError;
 
-      // 학생 데이터 결합
       const statusMap = new Map(statuses?.map((s) => [s.user_id, s]) || []);
 
       const studentRows: StudentRow[] = (profiles || []).map((profile) => ({
@@ -88,7 +85,7 @@ export default function AdminDashboard() {
           schema: "public",
           table: "student_status",
         },
-        (payload) => {
+        () => {
           loadStudents();
         }
       )
@@ -137,10 +134,10 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="admin" userName="관리자" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-brand-600">로딩 중...</p>
+            <p className="text-brand-600 font-medium">로딩 중...</p>
           </div>
           <BottomNav />
         </main>
@@ -150,30 +147,30 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="admin" userName="구영민 선생님" />
       <main className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-6">
+        <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-8">
           <div className="max-w-6xl mx-auto">
             {/* 헤더 */}
-            <div className="mb-8">
-              <p className="text-sm text-brand-500 mb-1">{todayStr}</p>
-              <h1 className="font-serif text-3xl font-bold text-brand-900">관리자 대시보드</h1>
-              <p className="text-brand-600 mt-1 text-sm">
-                현재 시각:{" "}
-                <span className="font-mono font-semibold text-brand-800">
-                  {now.toLocaleTimeString("ko-KR")}
-                </span>
-              </p>
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="font-serif text-3xl font-bold text-brand-900">관리자 대시보드</h1>
+                <div className="flex items-center gap-2 text-brand-400 text-sm font-medium">
+                  <Clock className="w-4 h-4" />
+                  {now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </div>
+              </div>
+              <p className="text-brand-500 font-medium">{todayStr}</p>
             </div>
 
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium">
                 {error}
               </div>
             )}
 
             {/* 요약 카드 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
               <SummaryCard
                 icon={<Users className="w-5 h-5 text-brand-500" />}
                 label="전체 학생"
@@ -181,7 +178,7 @@ export default function AdminDashboard() {
                 sub="등록 학생"
               />
               <SummaryCard
-                icon={<span className="w-5 h-5 rounded-full bg-status-study inline-block" />}
+                icon={<div className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" />}
                 label="학습 중"
                 value={`${studying}명`}
                 sub={`외출 ${outing}명`}
@@ -202,41 +199,51 @@ export default function AdminDashboard() {
             </div>
 
             {/* 실시간 학생 현황 */}
-            <div className="bg-white rounded-2xl border border-brand-100 shadow-soft overflow-hidden">
-              <div className="px-6 py-4 border-b border-brand-100 flex items-center justify-between">
-                <h2 className="font-serif text-lg font-semibold text-brand-900">
-                  실시간 학생 현황
-                </h2>
-                <span className="flex items-center gap-1.5 text-xs text-status-study">
-                  <span className="h-1.5 w-1.5 rounded-full bg-status-study animate-pulse" />
-                  실시간 업데이트
-                </span>
+            <div className="bg-white rounded-[32px] border border-brand-100 shadow-soft overflow-hidden">
+              <div className="px-8 py-6 border-b border-brand-100 flex items-center justify-between bg-white">
+                <div>
+                  <h2 className="font-serif text-xl font-bold text-brand-900">
+                    실시간 학생 현황
+                  </h2>
+                  <p className="text-xs text-brand-400 mt-1 font-medium">좌석별 학습 상태 및 누적 시간</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative hidden sm:block">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-brand-300" />
+                    <input 
+                      type="text" 
+                      placeholder="학생 검색..." 
+                      className="pl-9 pr-4 py-2 bg-brand-50 border-none rounded-xl text-xs font-medium text-brand-900 placeholder:text-brand-300 focus:ring-2 focus:ring-brand-200 w-48 transition-all"
+                    />
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[11px] font-bold text-brand-500 uppercase tracking-wider">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+                    Live
+                  </span>
+                </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-brand-50">
-                    <tr>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-brand-500 uppercase tracking-wider">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-brand-50/50">
+                      <th className="text-left px-8 py-4 text-[11px] font-bold text-brand-400 uppercase tracking-widest">
                         이름
                       </th>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-brand-500 uppercase tracking-wider">
-                        이메일
-                      </th>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-brand-500 uppercase tracking-wider">
+                      <th className="text-left px-8 py-4 text-[11px] font-bold text-brand-400 uppercase tracking-widest">
                         상태
                       </th>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-brand-500 uppercase tracking-wider">
+                      <th className="text-left px-8 py-4 text-[11px] font-bold text-brand-400 uppercase tracking-widest">
                         오늘 학습
                       </th>
-                      <th className="text-left px-6 py-3 text-xs font-medium text-brand-500 uppercase tracking-wider">
-                        관리
+                      <th className="text-left px-8 py-4 text-[11px] font-bold text-brand-400 uppercase tracking-widest">
+                        상태 관리
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-50">
                     {students.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-brand-400 text-sm">
+                        <td colSpan={4} className="px-8 py-12 text-center text-brand-300 text-sm font-medium">
                           등록된 학생이 없습니다.
                         </td>
                       </tr>
@@ -244,43 +251,44 @@ export default function AdminDashboard() {
                       students.map((student) => (
                         <tr
                           key={student.profile.id}
-                          className="hover:bg-brand-50/50 transition-colors"
+                          className="hover:bg-brand-50/30 transition-colors group"
                         >
-                          <td className="px-6 py-4 font-medium text-brand-900">
-                            {student.profile.name}
+                          <td className="px-8 py-5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-xs">
+                                {student.profile.name[0]}
+                              </div>
+                              <div>
+                                <p className="font-bold text-brand-900 text-sm">{student.profile.name}</p>
+                                <p className="text-[11px] text-brand-400 font-medium">{student.profile.email}</p>
+                              </div>
+                            </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-brand-600">
-                            {student.profile.email}
-                          </td>
-                          <td className="px-6 py-4">
+                          <td className="px-8 py-5">
                             {student.status ? (
                               <StatusBadge status={student.status.status} />
                             ) : (
-                              <span className="text-xs text-brand-400">-</span>
+                              <span className="text-xs text-brand-300 font-medium">미등록</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 font-mono text-sm text-brand-700">
-                            {formatTime(student.today_minutes * 60)}
+                          <td className="px-8 py-5">
+                            <span className="font-mono font-bold text-brand-700 text-sm">
+                              {formatTime(student.today_minutes * 60)}
+                            </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="flex gap-2">
+                          <td className="px-8 py-5">
+                            <div className="flex gap-1.5">
                               {(["study", "outing", "sleep", "away"] as const).map((s) => (
                                 <button
                                   key={s}
                                   onClick={() => updateStatus(student.profile.id, s)}
-                                  className={`px-2 py-1 rounded text-xs transition-all ${
+                                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
                                     student.status?.status === s
-                                      ? "bg-brand-900 text-white"
-                                      : "bg-brand-50 text-brand-600 hover:bg-brand-100"
+                                      ? "bg-brand-700 text-white shadow-md"
+                                      : "bg-brand-50 text-brand-500 hover:bg-brand-100 hover:text-brand-700"
                                   }`}
                                 >
-                                  {s === "study"
-                                    ? "학습"
-                                    : s === "outing"
-                                    ? "외출"
-                                    : s === "sleep"
-                                    ? "수면"
-                                    : "하원"}
+                                  {s === "study" ? "학습" : s === "outing" ? "외출" : s === "sleep" ? "수면" : "하원"}
                                 </button>
                               ))}
                             </div>
@@ -315,18 +323,26 @@ function SummaryCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-5 border shadow-soft ${
-        highlight ? "bg-brand-900 border-brand-800 text-white" : "bg-white border-brand-100"
+      className={`rounded-[28px] p-6 border transition-all hover:shadow-lg ${
+        highlight 
+          ? "bg-brand-700 border-brand-600 text-white shadow-brand-200/50 shadow-xl" 
+          : "bg-white border-brand-100 text-brand-900 shadow-soft"
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium opacity-70">{label}</span>
-        {icon}
+      <div className="flex items-center justify-between mb-4">
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${highlight ? "text-brand-200" : "text-brand-400"}`}>
+          {label}
+        </span>
+        <div className={highlight ? "text-white" : "text-brand-500"}>
+          {icon}
+        </div>
       </div>
-      <p className={`text-2xl font-bold font-serif ${highlight ? "text-white" : "text-brand-900"}`}>
+      <p className="text-3xl font-bold font-serif mb-1">
         {value}
       </p>
-      <p className={`text-xs mt-1 ${highlight ? "text-brand-200" : "text-brand-400"}`}>{sub}</p>
+      <p className={`text-[11px] font-semibold ${highlight ? "text-brand-200/80" : "text-brand-400"}`}>
+        {sub}
+      </p>
     </div>
   );
 }
