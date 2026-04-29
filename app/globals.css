@@ -7,12 +7,12 @@
 @layer base {
   :root {
     --font-serif: 'Noto Serif KR', Georgia, serif;
-    --font-display: 'Noto Sans KR', system-ui, sans-serif;
+    --font-sans: 'Noto Sans KR', system-ui, sans-serif;
   }
 
   body {
     @apply bg-brand-50 text-brand-900 antialiased;
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
   }
 
   h1, h2, h3 {
