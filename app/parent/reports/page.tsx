@@ -1,24 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { formatTime, getTodayStr } from "@/lib/utils";
-import { FileText, ChevronRight } from "lucide-react";
+import { formatTime } from "@/lib/utils";
+import { FileText, ChevronRight, Clock, CheckCircle, MessageCircle, Calendar } from "lucide-react";
 import Sidebar from "@/components/shared/Sidebar";
 import BottomNav from "@/components/shared/BottomNav";
 
-interface DailyReport {
+interface Report {
   id: string;
+  student_id: string;
   date: string;
-  daily_minutes: number;
-  tasks: Array<{ completed: boolean }>;
+  study_seconds: number;
+  completed_tasks: number;
+  total_tasks: number;
   reflection: string;
-  teacher_comment?: string;
+  teacher_comment: string;
+  created_at: string;
 }
 
-export default function ParentReportsPage() {
-  const [reports, setReports] = useState<DailyReport[]>([]);
-  const [selected, setSelected] = useState<DailyReport | null>(null);
+export default function ParentReports() {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [selected, setSelected] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -29,74 +32,32 @@ export default function ParentReportsPage() {
 
   async function loadReports() {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("로그인이 필요합니다.");
 
-      // 학부모 프로필 가져오기
-      const { data: parentProfile, error: parentError } = await supabase
+      // 1. 자녀 정보 가져오기 (현재는 첫 번째 학생으로 설정)
+      const { data: student, error: studentError } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (parentError) throw parentError;
-
-      // 자녀 정보 가져오기 (첫 번째 학생)
-      const { data: students, error: studentError } = await supabase
-        .from("profiles")
-        .select("*")
+        .select("id")
         .eq("role", "student")
         .limit(1)
         .single();
 
-      if (studentError && studentError.code !== "PGRST116") throw studentError;
+      if (studentError) throw studentError;
 
-      if (!students) {
-        setReports([]);
-        setLoading(false);
-        return;
-      }
-
-      // 지난 30일의 일일 계획 가져오기
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const startDate = thirtyDaysAgo.toISOString().split("T")[0];
-
-      const { data: plans, error: plansError } = await supabase
-        .from("daily_plans")
+      // 2. 해당 학생의 보고서 목록 가져오기
+      const { data, error: reportError } = await supabase
+        .from("reports")
         .select("*")
-        .eq("user_id", students.id)
-        .gte("date", startDate)
+        .eq("student_id", student.id)
         .order("date", { ascending: false });
 
-      if (plansError) throw plansError;
+      if (reportError) throw reportError;
 
-      // 각 계획에 대한 통계 정보 가져오기
-      const reportsWithStats = await Promise.all(
-        (plans || []).map(async (plan) => {
-          const { data: stats } = await supabase
-            .from("study_stats")
-            .select("*")
-            .eq("user_id", students.id)
-            .eq("date", plan.date)
-            .single();
-
-          return {
-            id: plan.id,
-            date: plan.date,
-            daily_minutes: stats?.daily_minutes || 0,
-            tasks: plan.tasks || [],
-            reflection: plan.reflection || "",
-            teacher_comment: plan.teacher_comment,
-          };
-        })
-      );
-
-      setReports(reportsWithStats);
-      if (reportsWithStats.length > 0) {
-        setSelected(reportsWithStats[0]);
+      setReports(data || []);
+      if (data && data.length > 0) {
+        setSelected(data[0]);
       }
     } catch (err: any) {
       setError(err.message);
@@ -108,66 +69,71 @@ export default function ParentReportsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-brand-50">
-        <Sidebar />
+        <Sidebar role="parent" userName="학부모" />
         <main className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-brand-600">로딩 중...</p>
+            <p className="text-brand-600 font-medium">로딩 중...</p>
           </div>
-          <BottomNav />
+          <BottomNav role="parent" />
         </main>
       </div>
     );
   }
 
-  const completedTasks = selected?.tasks?.filter((t) => t.completed).length || 0;
-  const totalTasks = selected?.tasks?.length || 0;
-  const progress = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   return (
     <div className="flex min-h-screen bg-brand-50">
-      <Sidebar />
+      <Sidebar role="parent" userName="학부모" />
       <main className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-6">
+        <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-8">
           <div className="max-w-5xl mx-auto">
-            <div className="mb-8">
+            {/* 헤더 */}
+            <div className="mb-10">
               <h1 className="font-serif text-3xl font-bold text-brand-900">학습 보고서</h1>
-              <p className="text-brand-500 text-sm mt-1">자녀의 일일 학습 보고서를 확인하세요</p>
+              <p className="text-brand-500 font-medium mt-1">자녀의 일일 학습 보고서를 확인하세요</p>
             </div>
 
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium">
                 {error}
               </div>
             )}
 
-            <div className="grid lg:grid-cols-5 gap-6">
+            <div className="grid lg:grid-cols-5 gap-8">
               {/* 보고서 목록 */}
-              <div className="lg:col-span-2 space-y-3">
+              <div className="lg:col-span-2 space-y-4">
+                <div className="px-2 mb-2">
+                  <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest">최근 보고서</p>
+                </div>
                 {reports.length === 0 ? (
-                  <div className="p-4 bg-white rounded-2xl border border-brand-100 text-center text-brand-400 text-sm">
-                    보고서가 없습니다.
+                  <div className="p-10 bg-white rounded-[32px] border border-brand-100 text-center text-brand-300 font-medium shadow-soft">
+                    <Calendar className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                    아직 발행된 보고서가 없습니다.
                   </div>
                 ) : (
                   reports.map((r) => (
                     <button
                       key={r.id}
                       onClick={() => setSelected(r)}
-                      className={`w-full text-left rounded-2xl border p-4 transition-all ${
+                      className={`w-full text-left rounded-[28px] border p-6 transition-all duration-300 shadow-soft group ${
                         selected?.id === r.id
-                          ? "border-brand-500 bg-brand-50"
-                          : "border-brand-100 bg-white hover:border-brand-300"
+                          ? "border-brand-500 bg-white ring-2 ring-brand-100"
+                          : "border-transparent bg-white hover:border-brand-200"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-brand-900">
-                          {new Date(r.date).toLocaleDateString("ko-KR")}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-brand-900">
+                          {new Date(r.date).toLocaleDateString("ko-KR", { month: 'long', day: 'numeric', weekday: 'short' })}
                         </span>
-                        <ChevronRight className="w-4 h-4 text-brand-300" />
+                        <ChevronRight className={`w-4 h-4 transition-transform ${selected?.id === r.id ? "text-brand-500 translate-x-1" : "text-brand-200"}`} />
                       </div>
-                      <div className="flex gap-3 text-xs text-brand-500">
-                        <span>학습 {formatTime(r.daily_minutes * 60)}</span>
-                        <span>
-                          달성 {completedTasks}/{totalTasks}
+                      <div className="flex gap-4 text-[11px] font-bold text-brand-500">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          {formatTime(r.study_seconds)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          달성 {r.completed_tasks}/{r.total_tasks}
                         </span>
                       </div>
                     </button>
@@ -176,64 +142,66 @@ export default function ParentReportsPage() {
               </div>
 
               {/* 보고서 상세 */}
-              {selected && (
-                <div className="lg:col-span-3 bg-white rounded-2xl border border-brand-100 shadow-soft p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="font-serif text-xl font-bold text-brand-900">
-                        일일 학습 보고서
-                      </h2>
-                      <p className="text-sm text-brand-500">
-                        {new Date(selected.date).toLocaleDateString("ko-KR")}
-                      </p>
-                    </div>
-                    <FileText className="w-6 h-6 text-brand-300" />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-brand-50 rounded-xl p-3 text-center">
-                      <p className="text-xs text-brand-500 mb-1">학습 시간</p>
-                      <p className="font-mono font-bold text-brand-900">
-                        {formatTime(selected.daily_minutes * 60)}
-                      </p>
-                    </div>
-                    <div className="bg-brand-50 rounded-xl p-3 text-center">
-                      <p className="text-xs text-brand-500 mb-1">과제 달성</p>
-                      <p className="font-bold text-brand-900">
-                        {completedTasks}/{totalTasks}
-                      </p>
-                    </div>
-                    <div className="bg-brand-50 rounded-xl p-3 text-center">
-                      <p className="text-xs text-brand-500 mb-1">달성률</p>
-                      <p className="font-bold text-brand-900">{progress}%</p>
-                    </div>
-                  </div>
-
-                  {selected.reflection && (
-                    <div className="mb-4">
-                      <p className="text-xs font-medium text-brand-500 uppercase tracking-wider mb-2">
-                        자녀 회고
-                      </p>
-                      <div className="bg-brand-50 rounded-xl p-4 text-sm text-brand-800 leading-relaxed">
-                        {selected.reflection}
+              <div className="lg:col-span-3">
+                {selected ? (
+                  <div className="bg-white rounded-[32px] border border-brand-100 shadow-soft p-8 sticky top-6">
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h2 className="font-serif text-2xl font-bold text-brand-900">일일 학습 보고서</h2>
+                        <p className="text-sm text-brand-400 font-medium mt-1">
+                          {new Date(selected.date).toLocaleDateString("ko-KR", { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center">
+                        <FileText className="w-6 h-6 text-brand-600" />
                       </div>
                     </div>
-                  )}
 
-                  <div>
-                    <p className="text-xs font-medium text-brand-500 uppercase tracking-wider mb-2">
-                      선생님 코멘트
-                    </p>
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-800 leading-relaxed">
-                      {selected.teacher_comment || "아직 코멘트가 없습니다."}
+                    <div className="grid grid-cols-3 gap-4 mb-8">
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">학습 시간</p>
+                        <p className="font-mono font-bold text-brand-900 text-lg">{formatTime(selected.study_seconds)}</p>
+                      </div>
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">과제 달성</p>
+                        <p className="font-bold text-brand-900 text-lg">{selected.completed_tasks}/{selected.total_tasks}</p>
+                      </div>
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">달성률</p>
+                        <p className="font-bold text-brand-900 text-lg">
+                          {selected.total_tasks ? Math.round((selected.completed_tasks / selected.total_tasks) * 100) : 0}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-8">
+                      <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-3">자녀 회고</p>
+                      <div className="bg-brand-50/30 rounded-2xl p-6 text-sm text-brand-800 leading-relaxed border border-brand-50 italic">
+                        "{selected.reflection || "오늘의 회고가 작성되지 않았습니다."}"
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-3">선생님 코멘트</p>
+                      <div className="bg-brand-900 rounded-[24px] p-6 text-sm text-white leading-relaxed shadow-lg shadow-brand-100 relative overflow-hidden">
+                        <MessageCircle className="w-12 h-12 absolute -bottom-2 -right-2 text-white/10" />
+                        <p className="relative z-10 font-medium">
+                          {selected.teacher_comment || "선생님의 코멘트가 아직 작성되지 않았습니다."}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="h-[500px] bg-white rounded-[32px] border border-dashed border-brand-200 flex flex-col items-center justify-center text-brand-300 p-10 text-center">
+                    <FileText className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p className="font-bold text-lg text-brand-400">보고서를 선택하세요</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav role="parent" />
       </main>
     </div>
   );

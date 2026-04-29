@@ -1,138 +1,282 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase";
 import { formatTime, getTodayStr } from "@/lib/utils";
-import { FileText, Send, ChevronDown } from "lucide-react";
+import { FileText, Send, Search, Clock, CheckCircle, TrendingUp } from "lucide-react";
+import Sidebar from "@/components/shared/Sidebar";
+import BottomNav from "@/components/shared/BottomNav";
 
 interface ReportRow {
   id: string;
-  studentName: string;
+  student_id: string;
+  student_name: string;
   date: string;
-  studySeconds: number;
-  completedTasks: number;
-  totalTasks: number;
+  study_seconds: number;
+  completed_tasks: number;
+  total_tasks: number;
   reflection: string;
-  teacherComment: string;
+  teacher_comment: string;
   sent: boolean;
 }
 
-const MOCK_REPORTS: ReportRow[] = [
-  { id: "1", studentName: "김민준", date: "2026-04-27", studySeconds: 14400, completedTasks: 4, totalTasks: 5, reflection: "수학 미적분 집중했습니다. 내일은 영어도 같이 해야겠어요.", teacherComment: "", sent: false },
-  { id: "2", studentName: "이서연", date: "2026-04-27", studySeconds: 12600, completedTasks: 3, totalTasks: 4, reflection: "영어 독해 어려웠지만 끝까지 했습니다.", teacherComment: "", sent: false },
-  { id: "3", studentName: "최수아", date: "2026-04-27", studySeconds: 18000, completedTasks: 5, totalTasks: 5, reflection: "오늘 계획 모두 완료! 뿌듯합니다.", teacherComment: "오늘도 훌륭했어요! 내일도 화이팅!", sent: true },
-  { id: "4", studentName: "강하은", date: "2026-04-26", studySeconds: 21600, completedTasks: 6, totalTasks: 6, reflection: "6시간 공부 달성! 국어, 수학, 영어 모두 완료.", teacherComment: "정말 대단해요. 이 페이스 유지해요!", sent: true },
-];
-
-export default function ReportsPage() {
-  const [reports, setReports] = useState<ReportRow[]>(MOCK_REPORTS);
+export default function AdminReports() {
+  const [reports, setReports] = useState<ReportRow[]>([]);
   const [selected, setSelected] = useState<ReportRow | null>(null);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const supabase = createClient();
 
-  function handleSave(id: string) {
-    setReports((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, teacherComment: comment, sent: true } : r))
-    );
-    setSelected(null);
-    setComment("");
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  async function loadReports() {
+    try {
+      setLoading(true);
+      const today = getTodayStr();
+      
+      // 1. 모든 학생 프로필 가져오기
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("role", "student");
+
+      if (profileError) throw profileError;
+
+      // 2. 오늘자 보고서 데이터 가져오기
+      const { data: reportData, error: reportError } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("date", today);
+
+      if (reportError) throw reportError;
+
+      // 3. 오늘자 학습 통계 및 계획 데이터 가져오기 (보고서가 없을 경우를 대비)
+      const { data: statsData } = await supabase
+        .from("study_stats")
+        .select("*")
+        .eq("date", today);
+
+      const { data: planData } = await supabase
+        .from("daily_plans")
+        .select("*")
+        .eq("date", today);
+
+      const reportMap = new Map(reportData?.map(r => [r.student_id, r]) || []);
+      const statsMap = new Map(statsData?.map(s => [s.user_id, s]) || []);
+      const planMap = new Map(planData?.map(p => [p.user_id, p]) || []);
+
+      const rows: ReportRow[] = profiles.map(p => {
+        const existingReport = reportMap.get(p.id);
+        const stats = statsMap.get(p.id);
+        const plan = planMap.get(p.id);
+        
+        const completed = plan?.tasks?.filter((t: any) => t.completed).length || 0;
+        const total = plan?.tasks?.length || 0;
+
+        return {
+          id: existingReport?.id || `new-${p.id}`,
+          student_id: p.id,
+          student_name: p.name,
+          date: today,
+          study_seconds: existingReport?.study_seconds || (stats?.daily_minutes || 0) * 60,
+          completed_tasks: existingReport?.completed_tasks || completed,
+          total_tasks: existingReport?.total_tasks || total,
+          reflection: existingReport?.reflection || plan?.reflection || "",
+          teacher_comment: existingReport?.teacher_comment || "",
+          sent: !!existingReport?.teacher_comment,
+        };
+      });
+
+      setReports(rows);
+    } catch (err) {
+      console.error("Error loading reports:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!selected) return;
+    
+    try {
+      setSaving(true);
+      const isNew = selected.id.startsWith("new-");
+      
+      const reportData = {
+        student_id: selected.student_id,
+        date: selected.date,
+        study_seconds: selected.study_seconds,
+        completed_tasks: selected.completed_tasks,
+        total_tasks: selected.total_tasks,
+        reflection: selected.reflection,
+        teacher_comment: comment,
+      };
+
+      let error;
+      if (isNew) {
+        const { error: insertError } = await supabase.from("reports").insert([reportData]);
+        error = insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from("reports")
+          .update(reportData)
+          .eq("id", selected.id);
+        error = updateError;
+      }
+
+      if (error) throw error;
+      
+      await loadReports();
+      setSelected(null);
+      setComment("");
+      alert("보고서가 저장 및 발송되었습니다.");
+    } catch (err) {
+      console.error("Error saving report:", err);
+      alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-brand-900">하원 보고서</h1>
-        <p className="text-brand-500 text-sm mt-1">학생별 일일 학습 보고서 작성 및 발송</p>
-      </div>
+    <div className="flex min-h-screen bg-brand-50">
+      <Sidebar role="admin" userName="구영민 선생님" />
+      <main className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 pb-24 lg:pb-8">
+          <div className="max-w-6xl mx-auto">
+            {/* 헤더 */}
+            <div className="mb-10">
+              <h1 className="font-serif text-3xl font-bold text-brand-900">하원 보고서</h1>
+              <p className="text-brand-500 font-medium mt-1">학생별 일일 학습 보고서 작성 및 발송</p>
+            </div>
 
-      <div className="grid lg:grid-cols-5 gap-6">
-        {/* 보고서 목록 */}
-        <div className="lg:col-span-2 space-y-3">
-          {reports.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => { setSelected(r); setComment(r.teacherComment); }}
-              className={`w-full text-left rounded-2xl border p-4 transition-all ${
-                selected?.id === r.id
-                  ? "border-brand-500 bg-brand-50"
-                  : "border-brand-100 bg-white hover:border-brand-300"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <span className="font-medium text-brand-900">{r.studentName}</span>
-                {r.sent ? (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">발송완료</span>
+            <div className="grid lg:grid-cols-5 gap-8">
+              {/* 보고서 목록 */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="relative mb-6">
+                  <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-brand-300" />
+                  <input 
+                    type="text" 
+                    placeholder="학생 검색..." 
+                    className="w-full pl-11 pr-4 py-3 bg-white border border-brand-100 rounded-2xl text-sm font-medium text-brand-900 placeholder:text-brand-300 focus:ring-2 focus:ring-brand-200 transition-all shadow-soft"
+                  />
+                </div>
+
+                {loading ? (
+                  <div className="text-center py-10 text-brand-400 text-sm font-medium">로딩 중...</div>
+                ) : reports.length === 0 ? (
+                  <div className="text-center py-10 text-brand-400 text-sm font-medium">학생 데이터가 없습니다.</div>
                 ) : (
-                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">미발송</span>
+                  reports.map((r) => (
+                    <button
+                      key={r.student_id}
+                      onClick={() => { setSelected(r); setComment(r.teacher_comment); }}
+                      className={`w-full text-left rounded-[28px] border p-6 transition-all duration-300 shadow-soft group ${
+                        selected?.student_id === r.student_id
+                          ? "border-brand-500 bg-white ring-2 ring-brand-100"
+                          : "border-transparent bg-white hover:border-brand-200"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="font-bold text-brand-900">{r.student_name}</span>
+                        {r.sent ? (
+                          <span className="text-[10px] font-bold bg-brand-50 text-brand-500 px-2.5 py-1 rounded-full uppercase tracking-wider">발송완료</span>
+                        ) : (
+                          <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full uppercase tracking-wider">미발송</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-bold text-brand-300 uppercase tracking-widest mb-4">{r.date}</p>
+                      <div className="flex gap-4 text-[11px] font-bold text-brand-500">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          {formatTime(r.study_seconds)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          달성 {r.completed_tasks}/{r.total_tasks}
+                        </span>
+                      </div>
+                    </button>
+                  ))
                 )}
               </div>
-              <p className="text-xs text-brand-500">{r.date}</p>
-              <div className="flex gap-3 mt-2 text-xs text-brand-600">
-                <span>학습 {formatTime(r.studySeconds)}</span>
-                <span>달성 {r.completedTasks}/{r.totalTasks}</span>
+
+              {/* 보고서 상세 */}
+              <div className="lg:col-span-3">
+                {selected ? (
+                  <div className="bg-white rounded-[32px] border border-brand-100 shadow-soft p-8 sticky top-6">
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h2 className="font-serif text-2xl font-bold text-brand-900">{selected.student_name}</h2>
+                        <p className="text-sm text-brand-400 font-medium mt-1">{selected.date} 일일 보고서</p>
+                      </div>
+                      <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center">
+                        <FileText className="w-6 h-6 text-brand-600" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mb-8">
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">학습 시간</p>
+                        <p className="font-mono font-bold text-brand-900 text-lg">{formatTime(selected.study_seconds)}</p>
+                      </div>
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">과제 달성</p>
+                        <p className="font-bold text-brand-900 text-lg">{selected.completed_tasks}/{selected.total_tasks}</p>
+                      </div>
+                      <div className="bg-brand-50/50 rounded-2xl p-4 text-center border border-brand-50">
+                        <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-2">달성률</p>
+                        <p className="font-bold text-brand-900 text-lg">
+                          {selected.total_tasks ? Math.round((selected.completed_tasks / selected.total_tasks) * 100) : 0}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-8">
+                      <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-3">학생 회고</p>
+                      <div className="bg-brand-50/30 rounded-2xl p-5 text-sm text-brand-800 leading-relaxed border border-brand-50 italic">
+                        "{selected.reflection || "오늘의 회고가 작성되지 않았습니다."}"
+                      </div>
+                    </div>
+
+                    <div className="mb-8">
+                      <p className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-3">선생님 코멘트</p>
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="학부모에게 전달할 코멘트를 작성하세요..."
+                        rows={5}
+                        className="w-full rounded-2xl border border-brand-100 bg-brand-50/30 px-5 py-4 text-sm text-brand-900 placeholder:text-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:bg-white transition-all resize-none font-medium"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex w-full items-center justify-center gap-3 bg-brand-900 text-white py-4 rounded-2xl text-sm font-bold hover:bg-brand-800 transition-all shadow-lg shadow-brand-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="w-4 h-4" />
+                      {saving ? "저장 중..." : "보고서 저장 및 발송"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-[600px] bg-white rounded-[32px] border border-dashed border-brand-200 flex flex-col items-center justify-center text-brand-300 p-10 text-center">
+                    <div className="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center mb-4">
+                      <FileText className="w-8 h-8 text-brand-200" />
+                    </div>
+                    <p className="font-bold text-lg text-brand-400">보고서를 선택하세요</p>
+                    <p className="text-sm mt-2 font-medium">왼쪽 목록에서 학생을 선택하여<br />오늘의 학습 보고서를 작성할 수 있습니다.</p>
+                  </div>
+                )}
               </div>
-            </button>
-          ))}
+            </div>
+          </div>
         </div>
-
-        {/* 보고서 상세 */}
-        {selected ? (
-          <div className="lg:col-span-3 bg-white rounded-2xl border border-brand-100 shadow-soft p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="font-serif text-xl font-bold text-brand-900">{selected.studentName}</h2>
-                <p className="text-sm text-brand-500">{selected.date} 일일 보고서</p>
-              </div>
-              <FileText className="w-6 h-6 text-brand-300" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-brand-50 rounded-xl p-3 text-center">
-                <p className="text-xs text-brand-500 mb-1">학습 시간</p>
-                <p className="font-mono font-bold text-brand-900 text-sm">{formatTime(selected.studySeconds)}</p>
-              </div>
-              <div className="bg-brand-50 rounded-xl p-3 text-center">
-                <p className="text-xs text-brand-500 mb-1">과제 달성</p>
-                <p className="font-bold text-brand-900 text-sm">{selected.completedTasks}/{selected.totalTasks}</p>
-              </div>
-              <div className="bg-brand-50 rounded-xl p-3 text-center">
-                <p className="text-xs text-brand-500 mb-1">달성률</p>
-                <p className="font-bold text-brand-900 text-sm">
-                  {selected.totalTasks ? Math.round((selected.completedTasks / selected.totalTasks) * 100) : 0}%
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-xs font-medium text-brand-500 uppercase tracking-wider mb-2">학생 회고</p>
-              <div className="bg-brand-50 rounded-xl p-4 text-sm text-brand-800 leading-relaxed">
-                {selected.reflection || "회고 없음"}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-xs font-medium text-brand-500 uppercase tracking-wider mb-2">선생님 코멘트</p>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="학부모에게 전달할 코멘트를 작성하세요..."
-                rows={4}
-                className="w-full rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900 placeholder:text-brand-300 focus:outline-none focus:border-brand-500 resize-none"
-              />
-            </div>
-
-            <button
-              onClick={() => handleSave(selected.id)}
-              className="flex w-full items-center justify-center gap-2 bg-brand-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-brand-800 transition-colors"
-            >
-              <Send className="w-4 h-4" />
-              보고서 저장 및 발송
-            </button>
-          </div>
-        ) : (
-          <div className="lg:col-span-3 bg-white rounded-2xl border border-dashed border-brand-200 flex items-center justify-center text-brand-300 text-sm">
-            보고서를 선택하세요
-          </div>
-        )}
-      </div>
+        <BottomNav role="admin" />
+      </main>
     </div>
   );
 }
