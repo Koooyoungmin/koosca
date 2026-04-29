@@ -42,7 +42,7 @@ interface BottomNavProps {
   role: "admin" | "student" | "parent";
 }
 
-export function BottomNav({ role }: BottomNavProps) {
+export default function BottomNav({ role }: BottomNavProps) {
   const pathname = usePathname();
   const navItems =
     role === "admin" ? adminNav : role === "student" ? studentNav : parentNav;
@@ -59,10 +59,10 @@ export function BottomNav({ role }: BottomNavProps) {
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center gap-1 py-3 text-xs transition-colors",
-                isActive ? "text-brand-900 font-medium" : "text-brand-400"
+                isActive ? "text-brand-600 font-bold" : "text-brand-400"
               )}
             >
-              <Icon className={cn("w-5 h-5", isActive && "text-brand-700")} />
+              <Icon className={cn("w-5 h-5", isActive && "text-brand-600")} />
               {item.label}
             </Link>
           );

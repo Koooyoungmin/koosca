@@ -70,28 +70,28 @@ export default function Sidebar({ role, userName }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-brand-100 min-h-screen flex-shrink-0">
+    <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-brand-100 min-h-screen flex-shrink-0 shadow-sm">
       {/* 로고 */}
-      <div className="p-5 border-b border-brand-100">
+      <div className="p-6 border-b border-brand-50">
         <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-900 font-serif text-base font-semibold text-brand-50 flex-shrink-0">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-900 font-serif text-lg font-bold text-white shadow-lg shadow-brand-200 flex-shrink-0">
             必
           </span>
           <div>
-            <p className="text-xs font-semibold text-brand-800">구영민必학원</p>
-            <p className="text-[11px] text-brand-400">독서실 관리</p>
+            <p className="text-sm font-bold text-brand-900">구영민必학원</p>
+            <p className="text-[11px] text-brand-400 font-medium">독서실 관리 시스템</p>
           </div>
         </div>
       </div>
 
       {/* 사용자 정보 */}
-      <div className="px-5 py-3 border-b border-brand-100">
-        <p className="text-[10px] text-brand-400 uppercase tracking-wider">{roleLabel}</p>
-        <p className="text-sm font-semibold text-brand-800 truncate">{userName ?? "사용자"}</p>
+      <div className="px-6 py-5 bg-brand-50/30">
+        <p className="text-[10px] text-brand-400 font-bold uppercase tracking-widest mb-1">{roleLabel}</p>
+        <p className="text-sm font-bold text-brand-900 truncate">{userName ?? "사용자"}</p>
       </div>
 
       {/* 네비게이션 */}
-      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const isChat = item.href.endsWith("/chat") || item.href.endsWith("/caretalk");
@@ -100,19 +100,19 @@ export default function Sidebar({ role, userName }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] transition-all",
+                "flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] transition-all duration-200",
                 isActive
-                  ? "bg-brand-700 text-white font-semibold"
-                  : "text-brand-600 hover:bg-brand-50 hover:text-brand-900"
+                  ? "bg-brand-900 text-white font-bold shadow-md shadow-brand-200"
+                  : "text-brand-500 hover:bg-brand-50 hover:text-brand-900 font-medium"
               )}
             >
-              <div className={cn(isActive ? "text-white" : "text-brand-500")}>
+              <div className={cn(isActive ? "text-white" : "text-brand-400 group-hover:text-brand-600")}>
                 {item.icon}
               </div>
               <span className="flex-1 truncate">{item.label}</span>
               {isChat && !isActive && (
-                <span className="text-[10px] bg-brand-100 text-brand-600 rounded-full px-1.5 py-0.5 flex-shrink-0">
-                  대화
+                <span className="text-[10px] bg-brand-100 text-brand-600 font-bold rounded-full px-2 py-0.5 flex-shrink-0">
+                  LIVE
                 </span>
               )}
             </Link>
@@ -121,10 +121,10 @@ export default function Sidebar({ role, userName }: SidebarProps) {
       </nav>
 
       {/* 로그아웃 */}
-      <div className="p-2.5 border-t border-brand-100">
+      <div className="p-4 border-t border-brand-50">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-brand-400 hover:bg-red-50 hover:text-red-600 transition-all"
+          className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-[13px] text-brand-400 hover:bg-red-50 hover:text-red-600 font-medium transition-all"
         >
           <LogOut className="w-5 h-5" />
           로그아웃

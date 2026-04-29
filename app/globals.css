@@ -8,17 +8,40 @@
   :root {
     --font-serif: 'Noto Serif KR', Georgia, serif;
     --font-sans: 'Noto Sans KR', system-ui, sans-serif;
+    
+    /* 블루 테마 색상 강제 정의 */
+    --brand-50: #eff6ff;
+    --brand-100: #dbeafe;
+    --brand-200: #bfdbfe;
+    --brand-300: #93c5fd;
+    --brand-400: #60a5fa;
+    --brand-500: #3b82f6;
+    --brand-600: #2563eb;
+    --brand-700: #1d4ed8;
+    --brand-800: #1e40af;
+    --brand-900: #1e3a8a;
   }
 
   body {
-    @apply bg-brand-50 text-brand-900 antialiased;
+    background-color: var(--brand-50) !important;
+    color: var(--brand-900) !important;
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3 {
     font-family: var(--font-serif);
+    color: var(--brand-900) !important;
   }
 }
+
+/* Tailwind 클래스가 적용되지 않을 경우를 대비한 백업 스타일 */
+.bg-brand-50 { background-color: var(--brand-50) !important; }
+.bg-brand-900 { background-color: var(--brand-900) !important; }
+.text-brand-900 { color: var(--brand-900) !important; }
+.text-brand-600 { color: var(--brand-600) !important; }
+.border-brand-100 { border-color: var(--brand-100) !important; }
 
 @layer utilities {
   .scrollbar-hide {
