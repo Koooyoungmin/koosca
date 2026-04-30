@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  important: true,
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,16 +11,16 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50:  "var(--brand-50)",
-          100: "var(--brand-100)",
-          200: "var(--brand-200)",
-          300: "var(--brand-300)",
-          400: "var(--brand-400)",
-          500: "var(--brand-500)",
-          600: "var(--brand-600)",
-          700: "var(--brand-700)",
-          800: "var(--brand-800)",
-          900: "var(--brand-900)",
+          50:  "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
         },
         status: {
           study:  "#3b82f6",
@@ -29,8 +30,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["var(--font-serif)", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["'Noto Serif KR'", "Georgia", "serif"],
+        sans: ["'Noto Sans KR'", "system-ui", "sans-serif"],
       },
       boxShadow: {
         soft: "0 4px 24px 0 rgba(30,58,138,0.08)",

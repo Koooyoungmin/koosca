@@ -4,51 +4,75 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --font-serif: 'Noto Serif KR', Georgia, serif;
-    --font-sans: 'Noto Sans KR', system-ui, sans-serif;
-    
-    /* 블루 테마 색상 강제 정의 */
-    --brand-50: #eff6ff;
-    --brand-100: #dbeafe;
-    --brand-200: #bfdbfe;
-    --brand-300: #93c5fd;
-    --brand-400: #60a5fa;
-    --brand-500: #3b82f6;
-    --brand-600: #2563eb;
-    --brand-700: #1d4ed8;
-    --brand-800: #1e40af;
-    --brand-900: #1e3a8a;
-  }
+:root {
+  /* Blue Theme Colors from Redesign */
+  --b50: #eff6ff !important;
+  --b100: #dbeafe !important;
+  --b200: #bfdbfe !important;
+  --b300: #93c5fd !important;
+  --b400: #60a5fa !important;
+  --b500: #3b82f6 !important;
+  --b600: #2563eb !important;
+  --b700: #1d4ed8 !important;
+  --b800: #1e40af !important;
+  --b900: #1e3a8a !important;
+  
+  --brand-50: var(--b50) !important;
+  --brand-100: var(--b100) !important;
+  --brand-200: var(--b200) !important;
+  --brand-300: var(--b300) !important;
+  --brand-400: var(--b400) !important;
+  --brand-500: var(--b500) !important;
+  --brand-600: var(--b600) !important;
+  --brand-700: var(--b700) !important;
+  --brand-800: var(--b800) !important;
+  --brand-900: var(--b900) !important;
 
-  body {
-    background-color: var(--brand-50) !important;
-    color: var(--brand-900) !important;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  --study: #3b82f6 !important;
+  --outing: #f59e0b !important;
+  --sleep: #94a3b8 !important;
+  --away: #ef4444 !important;
 
-  h1, h2, h3 {
-    font-family: var(--font-serif);
-    color: var(--brand-900) !important;
-  }
+  --background: var(--b50) !important;
+  --foreground: var(--b900) !important;
+  
+  --font-serif: 'Noto Serif KR', Georgia, serif !important;
+  --font-sans: 'Noto Sans KR', system-ui, sans-serif !important;
 }
 
-/* Tailwind 클래스가 적용되지 않을 경우를 대비한 백업 스타일 */
-.bg-brand-50 { background-color: var(--brand-50) !important; }
-.bg-brand-900 { background-color: var(--brand-900) !important; }
-.text-brand-900 { color: var(--brand-900) !important; }
-.text-brand-600 { color: var(--brand-600) !important; }
-.border-brand-100 { border-color: var(--brand-100) !important; }
+body {
+  background-color: var(--b50) !important;
+  color: var(--b900) !important;
+  font-family: var(--font-sans) !important;
+}
 
-@layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: var(--font-serif) !important;
+}
+
+/* Force override any green styles */
+.bg-brand-900 { background-color: var(--b900) !important; }
+.bg-brand-800 { background-color: var(--b800) !important; }
+.bg-brand-700 { background-color: var(--b700) !important; }
+.bg-brand-600 { background-color: var(--b600) !important; }
+.bg-brand-500 { background-color: var(--b500) !important; }
+.bg-brand-50 { background-color: var(--b50) !important; }
+
+.text-brand-900 { color: var(--b900) !important; }
+.text-brand-800 { color: var(--b800) !important; }
+.text-brand-700 { color: var(--b700) !important; }
+.text-brand-600 { color: var(--b600) !important; }
+.text-brand-500 { color: var(--b500) !important; }
+.text-brand-400 { color: var(--b400) !important; }
+.text-brand-300 { color: var(--b300) !important; }
+
+.border-brand-100 { border-color: var(--b100) !important; }
+.border-brand-200 { border-color: var(--b200) !important; }
+.border-brand-500 { border-color: var(--b500) !important; }
+
+.ring-brand-100 { --tw-ring-color: var(--b100) !important; }
+.ring-brand-200 { --tw-ring-color: var(--b200) !important; }
+
+.shadow-soft {
+  box-shadow: 0 4px 24px 0 rgba(30, 58, 138, 0.08) !important;
 }
